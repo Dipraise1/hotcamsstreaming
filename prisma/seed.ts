@@ -1,5 +1,4 @@
 import { PrismaClient } from '../src/generated/prisma'
-import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -106,8 +105,6 @@ async function main() {
     }
   ]
   
-  const hashedPassword = await bcrypt.hash('password123', 12)
-  
   // Create performers with profiles
   const createdPerformers = []
   for (const performer of performerData) {
@@ -115,11 +112,9 @@ async function main() {
       data: {
         email: performer.email,
         username: performer.username,
-        hashedPassword,
         displayName: performer.displayName,
         role: 'PERFORMER',
         isVerified: true,
-        ageVerified: true,
         dateOfBirth: new Date(2000 - performer.age, 0, 1),
         bio: performer.bio,
         location: performer.location,
@@ -141,7 +136,6 @@ async function main() {
             videos: performer.videos,
             totalEarnings: Math.random() * 50000 + 10000,
             totalViews: Math.floor(Math.random() * 500000) + 50000,
-            totalFollowers: Math.floor(Math.random() * 10000) + 1000,
             rating: 4.2 + Math.random() * 0.8,
             ratingCount: Math.floor(Math.random() * 500) + 100
           }
@@ -190,10 +184,8 @@ async function main() {
       data: {
         email: viewerInfo.email,
         username: viewerInfo.username,
-        hashedPassword,
         displayName: viewerInfo.displayName,
         role: 'VIEWER',
-        ageVerified: true,
         dateOfBirth: new Date(1990, 0, 1)
       }
     })
@@ -267,11 +259,10 @@ async function main() {
         data: {
           userId: performer.id,
           date,
-          views: Math.floor(Math.random() * 1000) + 100,
-          uniqueViewers: Math.floor(Math.random() * 500) + 50,
-          tips: Math.random() * 200 + 20,
-          newFollowers: Math.floor(Math.random() * 20) + 1,
-          streamTime: Math.floor(Math.random() * 8) + 1
+                      totalViews: Math.floor(Math.random() * 1000) + 100,
+            uniqueViewers: Math.floor(Math.random() * 500) + 50,
+            totalTips: Math.random() * 200 + 20,
+            newFollowers: Math.floor(Math.random() * 20) + 1
         }
       })
     }
