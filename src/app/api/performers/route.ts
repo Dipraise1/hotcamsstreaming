@@ -71,7 +71,7 @@ export async function GET(request: Request) {
         privateShowRate: performer.performerProfile.privateShowRate,
         totalEarnings: performer.performerProfile.totalEarnings,
         totalViews: performer.performerProfile.totalViews,
-        totalFollowers: performer.performerProfile.totalFollowers,
+        totalFollowers: performer._count.followers,
         rating: performer.performerProfile.rating,
         ratingCount: performer.performerProfile.ratingCount,
         isVerified: performer.performerProfile.isVerified

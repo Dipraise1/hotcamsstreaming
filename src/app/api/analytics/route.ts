@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server'
-import { prisma, updateAnalytics } from '@/lib/database'
+import { prisma, getGlobalAnalytics } from '@/lib/database'
 
 export async function GET() {
   try {
-    // Update analytics first
-    await updateAnalytics()
+    // Get global analytics
+    const globalStats = await getGlobalAnalytics()
     
     // Get today's analytics
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
-    const todayAnalytics = await prisma.analytics.findUnique({
+    const todayAnalytics = await prisma.analytics.findMany({
       where: { date: today }
     })
     
@@ -54,8 +54,23 @@ export async function GET() {
       }
     })
     
+    // Aggregate today's analytics
+    const todayAggregated = todayAnalytics.reduce((acc, curr) => ({
+      totalViews: acc.totalViews + curr.totalViews,
+      uniqueViewers: acc.uniqueViewers + curr.uniqueViewers,
+      totalTips: acc.totalTips + curr.totalTips,
+      newFollowers: acc.newFollowers + curr.newFollowers,
+      totalEarnings: acc.totalEarnings + curr.totalEarnings
+    }), {
+      totalViews: 0,
+      uniqueViewers: 0,
+      totalTips: 0,
+      newFollowers: 0,
+      totalEarnings: 0
+    })
+
     return NextResponse.json({
-      today: todayAnalytics,
+      today: todayAggregated,
       weekly: weeklyAnalytics,
       realTime: {
         liveStreams,

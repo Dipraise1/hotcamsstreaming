@@ -28,7 +28,8 @@ const getStreamData = (id: string) => ({
     age: "22",
     rating: 4.8,
     followers: 8943,
-    isVerified: true
+    isVerified: true,
+    walletAddress: "0x742d35Cc6635C0532925a3b8D84D969C8C44E5"
   },
   playbackId: `pb_${id}`,
   viewers: 1247,
@@ -328,8 +329,9 @@ export default function WatchPage() {
       <TipModal
         isOpen={showTipModal}
         onClose={() => setShowTipModal(false)}
-        recipientName={streamData.performer.name}
-        onTip={handleTip}
+        streamerName={streamData.performer.name}
+        streamerAddress={streamData.performer.walletAddress || '0x742d35Cc6635C0532925a3b8D84D969C8C44E5'}
+        streamerAvatar={streamData.performer.avatar}
       />
     </div>
   )

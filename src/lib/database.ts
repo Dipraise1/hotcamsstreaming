@@ -33,7 +33,7 @@ export function stringifyJsonField(data: any[]): string {
 }
 
 // Real-time analytics helpers
-export async function updateAnalytics() {
+export async function getGlobalAnalytics() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   
@@ -46,23 +46,9 @@ export async function updateAnalytics() {
     }
   })
   
-  const activePerformers = await prisma.performerProfile.count({
+  const liveStreams = await prisma.stream.count({
     where: {
-      user: {
-        streams: {
-          some: {
-            isLive: true
-          }
-        }
-      }
-    }
-  })
-  
-  const totalStreams = await prisma.stream.count({
-    where: {
-      createdAt: {
-        gte: today
-      }
+      isLive: true
     }
   })
   
@@ -86,28 +72,14 @@ export async function updateAnalytics() {
     }
   })
   
-  await prisma.analytics.upsert({
-    where: { date: today },
-    update: {
-      totalUsers,
-      newUsers,
-      activePerformers,
-      totalStreams,
-      totalViewers: totalViewersResult._sum.currentViewers || 0,
-      totalTips: totalTipsResult._sum.amount || 0,
-      totalRevenue: (totalTipsResult._sum.amount || 0) * 0.2 // 20% platform fee
-    },
-    create: {
-      date: today,
-      totalUsers,
-      newUsers,
-      activePerformers,
-      totalStreams,
-      totalViewers: totalViewersResult._sum.currentViewers || 0,
-      totalTips: totalTipsResult._sum.amount || 0,
-      totalRevenue: (totalTipsResult._sum.amount || 0) * 0.2
-    }
-  })
+  return {
+    totalUsers,
+    newUsers,
+    liveStreams,
+    totalViewers: totalViewersResult._sum.currentViewers || 0,
+    totalTips: totalTipsResult._sum.amount || 0,
+    totalRevenue: (totalTipsResult._sum.amount || 0) * 0.2 // 20% platform fee
+  }
 }
 
 // Get live performers with real data
