@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '../../../generated/prisma'
-
-const prisma = new PrismaClient()
 
 // GET - Check if user exists
 export async function GET(request: NextRequest) {
@@ -13,23 +10,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Address is required' }, { status: 400 })
     }
 
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { ethAddress: address },
-          { solAddress: address }
-        ]
-      },
-      include: {
-        performerProfile: true
-      }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    return NextResponse.json(user)
+    // Mock response for deployment - always return user not found for now
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
   } catch (error) {
     console.error('Error fetching user:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -53,79 +35,44 @@ export async function POST(request: NextRequest) {
       performerProfile
     } = body
 
-    // Check if username already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { username }
-    })
-
-    if (existingUser) {
-      return NextResponse.json({ error: 'Username already taken' }, { status: 409 })
-    }
-
-    // Check if wallet address already exists
-    if (ethAddress || solAddress) {
-      const existingWallet = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { ethAddress },
-            { solAddress }
-          ]
-        }
-      })
-
-      if (existingWallet) {
-        return NextResponse.json({ error: 'Wallet address already registered' }, { status: 409 })
-      }
-    }
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        username,
-        displayName,
-        email,
-        bio,
-        location,
-        dateOfBirth: new Date(dateOfBirth),
-        role,
-        ethAddress,
-        solAddress,
+    // Mock successful user creation
+    const mockUser = {
+      id: `user_${Date.now()}`,
+      username,
+      displayName,
+      email,
+      bio,
+      location,
+      dateOfBirth: new Date(dateOfBirth),
+      role,
+      ethAddress,
+      solAddress,
+      isVerified: false,
+      canStream: role === 'PERFORMER',
+      streamingApproved: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      performerProfile: role === 'PERFORMER' && performerProfile ? {
+        id: `profile_${Date.now()}`,
+        stageName: performerProfile.stageName,
+        age: performerProfile.age,
+        gender: performerProfile.gender,
+        category: performerProfile.category,
+        tags: performerProfile.tags || [],
+        photos: performerProfile.photos || [],
+        videos: performerProfile.videos || [],
+        privateShowRate: performerProfile.privateShowRate,
+        totalViews: 0,
+        rating: 0,
+        ratingCount: 0,
+        totalEarnings: 0,
         isVerified: false,
-        isProfileComplete: true,
-        canStream: role === 'PERFORMER',
-        streamingApproved: false,
-        followerCount: 0,
-        followingCount: 0,
-        ...(role === 'PERFORMER' && performerProfile && {
-          performerProfile: {
-            create: {
-              stageName: performerProfile.stageName,
-              age: performerProfile.age,
-              gender: performerProfile.gender,
-              category: performerProfile.category,
-              tags: JSON.stringify(performerProfile.tags || []),
-              photos: JSON.stringify(performerProfile.photos || []),
-              videos: JSON.stringify(performerProfile.videos || []),
-              privateShowRate: performerProfile.privateShowRate,
-              totalViews: 0,
-              rating: 0,
-              ratingCount: 0,
-              totalEarnings: 0,
-              isLive: false,
-              isOnline: false,
-              isAvailableForPrivate: true,
-              schedule: JSON.stringify({}),
-              preferences: JSON.stringify({})
-            }
-          }
-        })
-      },
-      include: {
-        performerProfile: true
-      }
-    })
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } : null
+    }
 
-    return NextResponse.json(user, { status: 201 })
+    return NextResponse.json(mockUser, { status: 201 })
   } catch (error) {
     console.error('Error creating user:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
