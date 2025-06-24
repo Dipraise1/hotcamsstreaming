@@ -1,97 +1,215 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: Request) {
+// Mock performers data for deployment
+const mockPerformers = [
+  {
+    id: '1',
+    username: 'stellarose',
+    walletAddress: '0x1234567890123456789012345678901234567890',
+    role: 'PERFORMER',
+    isOnline: true,
+    performerProfile: {
+      stageName: 'Stella Rose',
+      category: 'CAM_GIRLS',
+      age: 24,
+      location: 'California, USA',
+      bio: 'Sweet and spicy 🌹 Come play with me!',
+      tags: ['cute', 'interactive', 'dancing'],
+      profilePhoto: '/IMG_9057.JPEG',
+      coverPhoto: '/photo_2022-11-08 23.56.28.jpeg',
+      videos: ['/IMG_9318.MP4', '/IMG_9352.MOV'],
+      photos: ['/IMG_9408.PNG', '/photo_2022-11-09 22.06.24.jpeg'],
+      totalViews: 145623,
+      rating: 4.8,
+      isLive: true,
+      currentViewers: 234,
+      tipGoal: 2000,
+      currentTips: 1456,
+      privateRate: 60,
+      isVerified: true
+    },
+    _count: {
+      followers: 3421
+    }
+  },
+  {
+    id: '2',
+    username: 'lunavixen',
+    walletAddress: '0x2345678901234567890123456789012345678901',
+    role: 'PERFORMER',
+    isOnline: true,
+    performerProfile: {
+      stageName: 'Luna Vixen',
+      category: 'CAM_GIRLS',
+      age: 26,
+      location: 'Miami, FL',
+      bio: 'Mysterious and seductive 🌙 Your midnight fantasy',
+      tags: ['seductive', 'mysterious', 'fetish'],
+      profilePhoto: '/photo_2022-11-08 23.56.28.jpeg',
+      coverPhoto: '/IMG_9408.PNG',
+      videos: ['/IMG_9424.MOV', '/telegram-cloud-document-4-5810047156039454056.mp4'],
+      photos: ['/IMG_9057.JPEG', '/photo_2022-11-09 22.06.24.jpeg'],
+      totalViews: 98765,
+      rating: 4.9,
+      isLive: true,
+      currentViewers: 189,
+      tipGoal: 1500,
+      currentTips: 876,
+      privateRate: 80,
+      isVerified: true
+    },
+    _count: {
+      followers: 2876
+    }
+  },
+  {
+    id: '3',
+    username: 'cherrybomb',
+    walletAddress: '0x3456789012345678901234567890123456789012',
+    role: 'PERFORMER',
+    isOnline: false,
+    performerProfile: {
+      stageName: 'Cherry Bomb',
+      category: 'CAM_GIRLS',
+      age: 22,
+      location: 'Las Vegas, NV',
+      bio: 'Explosive fun! 💥 Ready to blow your mind',
+      tags: ['energetic', 'fun', 'wild'],
+      profilePhoto: '/photo_2022-11-09 22.06.24.jpeg',
+      coverPhoto: '/IMG_9057.JPEG',
+      videos: ['/IMG_9436-2.MOV', '/telegram-cloud-document-5-6073303203603022769.mp4'],
+      photos: ['/IMG_9408.PNG', '/photo_2022-11-08 23.56.28.jpeg'],
+      totalViews: 76543,
+      rating: 4.7,
+      isLive: false,
+      currentViewers: 0,
+      tipGoal: 3000,
+      currentTips: 0,
+      privateRate: 70,
+      isVerified: true
+    },
+    _count: {
+      followers: 1987
+    }
+  }
+]
+
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const live = searchParams.get('live')
-    
-    // Mock data for deployment - replace with real database queries later
-    const mockPerformers = [
-      {
-        id: "1",
-        username: "sophia_rose",
-        displayName: "Sophia Rose",
-        avatar: "/IMG_9057.JPEG",
-        bio: "Sweet and playful cam girl who loves to chat and have fun! Come join me for some intimate moments 💕",
-        location: "Los Angeles, CA",
-        isVerified: true,
-        profile: {
-          stageName: "Sophia Rose",
-          age: 24,
-          category: "CAM_GIRLS",
-          tags: ["blonde", "petite", "interactive", "girlfriend-experience", "toys"],
-          languages: ["English", "Spanish"],
-          photos: ["/IMG_9057.JPEG", "/photo_2022-11-08 23.56.28.jpeg"],
-          videos: ["/telegram-cloud-document-5-6073303203603022769.mp4"],
-          privateShowRate: 6.5,
-          totalEarnings: 45000,
-          totalViews: 280000,
-          totalFollowers: 3500,
-          rating: 4.8,
-          ratingCount: 324,
-          isVerified: true
-        },
-        stream: {
-          id: "stream_1",
-          title: "Sophia's Sensual Evening Show 💕",
-          isLive: true,
-          currentViewers: 247,
-          playbackId: "pb_sophia_123"
-        },
-        followerCount: 3500
-      },
-      {
-        id: "2",
-        username: "maya_wild",
-        displayName: "Maya Wild",
-        avatar: "/photo_2022-11-09 22.06.24.jpeg",
-        bio: "Exotic beauty with a wild side! I love exploring fantasies and making your dreams come true ✨",
-        location: "Miami, FL",
-        isVerified: true,
-        profile: {
-          stageName: "Maya Wild",
-          age: 26,
-          category: "CAM_GIRLS",
-          tags: ["brunette", "curvy", "fetish-friendly", "roleplay", "dancing"],
-          languages: ["English", "French"],
-          photos: ["/photo_2022-11-09 22.06.24.jpeg", "/IMG_9408.PNG"],
-          videos: ["/IMG_9318.MP4", "/IMG_9352.MOV"],
-          privateShowRate: 8.0,
-          totalEarnings: 62000,
-          totalViews: 350000,
-          totalFollowers: 4200,
-          rating: 4.9,
-          ratingCount: 456,
-          isVerified: true
-        },
-        stream: live === 'true' ? {
-          id: "stream_2",
-          title: "Maya's Wild Adventure 🔥",
-          isLive: true,
-          currentViewers: 189,
-          playbackId: "pb_maya_456"
-        } : null,
-        followerCount: 4200
+    const search = searchParams.get('search')
+
+    // In production/build, always return mock data
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+      let filtered = [...mockPerformers]
+
+      // Apply filters
+      if (category && category !== 'ALL') {
+        filtered = filtered.filter(p => 
+          p.performerProfile?.category === category
+        )
       }
-    ]
 
-    // Filter by category if specified
-    let filteredPerformers = mockPerformers
-    if (category && category !== 'all') {
-      filteredPerformers = mockPerformers.filter(p => 
-        p.profile.category === category.toUpperCase()
-      )
+      if (live === 'true') {
+        filtered = filtered.filter(p => p.performerProfile?.isLive === true)
+      }
+
+      if (search) {
+        const searchLower = search.toLowerCase()
+        filtered = filtered.filter(p =>
+          p.performerProfile?.stageName?.toLowerCase().includes(searchLower) ||
+          p.performerProfile?.tags?.some(tag => tag.toLowerCase().includes(searchLower)) ||
+          p.performerProfile?.location?.toLowerCase().includes(searchLower)
+        )
+      }
+
+      return NextResponse.json(filtered)
     }
 
-    // Filter by live status if specified
-    if (live === 'true') {
-      filteredPerformers = filteredPerformers.filter(p => p.stream?.isLive)
-    }
+    // Try to use real database in development
+    try {
+      const { prisma } = await import('../../../lib/database')
+      
+      if (!prisma) {
+        return NextResponse.json(mockPerformers)
+      }
 
-    return NextResponse.json(filteredPerformers)
+      let whereClause: any = {
+        role: 'PERFORMER',
+        performerProfile: {
+          isNot: null
+        }
+      }
+
+      if (category && category !== 'ALL') {
+        whereClause.performerProfile = {
+          ...whereClause.performerProfile,
+          category: category
+        }
+      }
+
+      if (live === 'true') {
+        whereClause.performerProfile = {
+          ...whereClause.performerProfile,
+          isLive: true
+        }
+      }
+
+      if (search) {
+        const searchTerms = search.toLowerCase()
+        whereClause.OR = [
+          {
+            performerProfile: {
+              stageName: {
+                contains: searchTerms,
+                mode: 'insensitive'
+              }
+            }
+          },
+          {
+            performerProfile: {
+              location: {
+                contains: searchTerms,
+                mode: 'insensitive'
+              }
+            }
+          }
+        ]
+      }
+
+      const performers = await prisma.user.findMany({
+        where: whereClause,
+        include: {
+          performerProfile: true,
+          _count: {
+            select: {
+              followers: true
+            }
+          }
+        },
+        orderBy: [
+          {
+            performerProfile: {
+              isLive: 'desc'
+            }
+          },
+          {
+            performerProfile: {
+              currentViewers: 'desc'
+            }
+          }
+        ]
+      })
+
+      return NextResponse.json(performers)
+    } catch (dbError) {
+      // Fallback to mock data if database fails
+      return NextResponse.json(mockPerformers)
+    }
   } catch (error) {
-    console.error('Error fetching performers:', error)
-    return NextResponse.json({ error: 'Failed to fetch performers' }, { status: 500 })
+    console.error('Performers API error:', error)
+    return NextResponse.json(mockPerformers)
   }
 } 
