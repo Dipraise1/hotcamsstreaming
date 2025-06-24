@@ -1,0 +1,277 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  username          String    @unique
+  email             String?   @unique
+  displayName       String?
+  avatar            String?
+  bio               String?
+  location          String?
+  dateOfBirth       DateTime?
+  isVerified        Boolean   @default(false)
+  role              UserRole  @default(VIEWER)
+  
+  // Wallet addresses
+  ethAddress        String?
+  solAddress        String?
+  
+  // Profile settings
+  isProfilePublic   Boolean   @default(true)
+  allowMessages     Boolean   @default(true)
+  showOnline        Boolean   @default(true)
+  
+  // Streaming settings
+  canStream         Boolean   @default(false)
+  streamingApproved Boolean   @default(false)
+  
+  // Relationships
+  performerProfile  PerformerProfile?
+  streams           Stream[]
+  tips              Tip[]
+  follows           Follow[]  @relation("UserFollows")
+  followers         Follow[]  @relation("UserFollowers")
+  chatMessages      ChatMessage[]
+  privateShows      PrivateShow[]
+  analytics         Analytics[]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model PerformerProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  stageName         String
+  age               Int
+  gender            Gender
+  category          Category
+  tags              String   // JSON array as string
+  languages         String   // JSON array as string
+  
+  // Media
+  photos            String   // JSON array as string
+  videos            String   // JSON array as string
+  
+  // Streaming info
+  streamTitle       String?
+  streamDescription String?
+  
+  // Pricing
+  privateShowRate   Float    @default(0.01)
+  tipGoal           Float?
+  
+  // Stats
+  totalEarnings     Float    @default(0)
+  totalViews        Int      @default(0)
+  rating            Float    @default(0)
+  ratingCount       Int      @default(0)
+  
+  // Verification
+  isVerified        Boolean  @default(false)
+  verificationDocs  String?  // JSON array as string
+  
+  // Streaming settings
+  allowPrivateShows Boolean  @default(true)
+  allowRecording    Boolean  @default(false)
+  autoAcceptPrivate Boolean  @default(false)
+  
+  // Schedule
+  schedule          String?  // JSON object as string
+  timezone          String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Stream {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String?
+  category        Category
+  tags            String      // JSON array as string
+  
+  // Livepeer integration
+  playbackId      String?
+  streamKey       String?
+  rtmpUrl         String?
+  
+  // Stream status
+  isLive          Boolean     @default(false)
+  isRecording     Boolean     @default(false)
+  isPrivate       Boolean     @default(false)
+  
+  // Stats
+  currentViewers  Int         @default(0)
+  totalViews      Int         @default(0)
+  peakViewers     Int         @default(0)
+  duration        Int         @default(0) // in seconds
+  
+  // Monetization
+  tipGoal         Float?
+  totalTips       Float       @default(0)
+  
+  // Timestamps
+  startedAt       DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relationships
+  tips            Tip[]
+  chatMessages    ChatMessage[]
+  privateShows    PrivateShow[]
+}
+
+model Tip {
+  id            String      @id @default(cuid())
+  fromUserId    String
+  fromUser      User        @relation(fields: [fromUserId], references: [id], onDelete: Cascade)
+  streamId      String?
+  stream        Stream?     @relation(fields: [streamId], references: [id], onDelete: SetNull)
+  
+  amount        Float
+  currency      Currency
+  message       String?
+  isAnonymous   Boolean     @default(false)
+  
+  // Blockchain info
+  txHash        String?
+  blockNumber   Int?
+  
+  createdAt     DateTime    @default(now())
+}
+
+model Follow {
+  id            String   @id @default(cuid())
+  followerId    String
+  follower      User     @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId   String
+  following     User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  
+  @@unique([followerId, followingId])
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streamId    String
+  stream      Stream   @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  
+  message     String
+  isVip       Boolean  @default(false)
+  isModerator Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+}
+
+model PrivateShow {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streamId        String
+  stream          Stream          @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  
+  status          PrivateShowStatus @default(REQUESTED)
+  ratePerMinute   Float
+  duration        Int?            // in seconds
+  totalCost       Float?
+  
+  // Blockchain payment
+  txHash          String?
+  
+  startedAt       DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Analytics {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  date          DateTime
+  
+  // Viewer stats
+  totalViews    Int      @default(0)
+  uniqueViewers Int      @default(0)
+  avgViewTime   Int      @default(0) // in seconds
+  peakViewers   Int      @default(0)
+  
+  // Earnings
+  totalTips     Float    @default(0)
+  privateShows  Float    @default(0)
+  totalEarnings Float    @default(0)
+  
+  // Engagement
+  chatMessages  Int      @default(0)
+  newFollowers  Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([userId, date])
+}
+
+// Enums
+enum UserRole {
+  VIEWER
+  PERFORMER
+  MODERATOR
+  ADMIN
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  COUPLE
+  TRANS
+  NON_BINARY
+}
+
+enum Category {
+  CAM_GIRLS
+  CAM_BOYS
+  COUPLES
+  TRANS
+  MATURE
+  FETISH_BDSM
+}
+
+enum Currency {
+  ETH
+  SOL
+  USDC
+  USDT
+}
+
+enum PrivateShowStatus {
+  REQUESTED
+  ACCEPTED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
